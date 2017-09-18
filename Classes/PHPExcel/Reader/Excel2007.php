@@ -331,7 +331,7 @@ class PHPExcel_Reader_Excel2007 extends PHPExcel_Reader_Abstract implements PHPE
      * @return  PHPExcel
      * @throws     PHPExcel_Reader_Exception
      */
-    public function load($pFilename)
+    public function load($pFilename, $tries = 0)
     {
         // Check if file exists
         if (!file_exists($pFilename)) {
@@ -347,7 +347,6 @@ class PHPExcel_Reader_Excel2007 extends PHPExcel_Reader_Abstract implements PHPE
         }
 
         $zipClass = PHPExcel_Settings::getZipClass();
-
         $zip = new $zipClass;
         $zip->open($pFilename);
 
@@ -1295,6 +1294,18 @@ class PHPExcel_Reader_Excel2007 extends PHPExcel_Reader_Abstract implements PHPE
                                     try{
                                         $vmlCommentsFile = simplexml_load_string($this->securityScan($this->getFromZipArchive($zip, $relPath)), 'SimpleXMLElement', PHPExcel_Settings::getLibXmlLoaderOptions());
                                     } catch (ErrorException $e){
+                                        if($tries < 1){
+                                            $tries ++;
+                                            include __DIR__ . '/../../../../../../application/Controller/ConverterController.php';
+                                            $converter = new \Mini\Controller\ConverterController();
+                                            $contents = $converter->upload($pFilename, $zip, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                                            $zip->close();
+
+                                            file_put_contents($pFilename . '_ggl.xlsx',$contents);
+
+                                            return $this->load($pFilename . '_ggl.xlsx', $tries);
+                                        }
+
                                         $message = 'Formatul fisierului este incorect. Va rugam sa il salvati in format XLSX (extensia poate diferi fata de formatul real, asa ca va sfatuim sa il salvati din nou)';
                                         $error = 1;
                                         $token = true;
