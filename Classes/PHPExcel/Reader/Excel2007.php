@@ -1292,7 +1292,24 @@ class PHPExcel_Reader_Excel2007 extends PHPExcel_Reader_Abstract implements PHPE
                                 foreach ($vmlComments as $relName => $relPath) {
                                     // Load VML comments file
                                     $relPath = PHPExcel_Shared_File::realpath(dirname("$dir/$fileWorksheet") . "/" . $relPath);
-                                    $vmlCommentsFile = simplexml_load_string($this->securityScan($this->getFromZipArchive($zip, $relPath)), 'SimpleXMLElement', PHPExcel_Settings::getLibXmlLoaderOptions());
+                                    try{
+                                        $vmlCommentsFile = simplexml_load_string($this->securityScan($this->getFromZipArchive($zip, $relPath)), 'SimpleXMLElement', PHPExcel_Settings::getLibXmlLoaderOptions());
+                                    } catch (ErrorException $e){
+                                        $message = 'Formatul fisierului este incorect. Va rugam sa il salvati in format XLSX (extensia poate diferi fata de formatul real, asa ca va sfatuim sa il salvati din nou)';
+                                        $error = 1;
+                                        $token = true;
+                                        $params = array();
+
+                                        header('Content-Type: application/json');
+                                        $array = array(
+                                            'message' => $message,
+                                            'error' => empty($error) ? 0 : $error,
+                                            'tokenStatus' => $token === true ? 1 : 0,
+                                            'params' => empty($params) ? '' : $params
+                                            );
+                                        echo json_encode($array);
+                                        die;
+                                    }
                                     $vmlCommentsFile->registerXPathNamespace('v', 'urn:schemas-microsoft-com:vml');
 
                                     $shapes = $vmlCommentsFile->xpath('//v:shape');
