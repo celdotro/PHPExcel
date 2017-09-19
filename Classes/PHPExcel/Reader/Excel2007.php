@@ -1299,25 +1299,16 @@ class PHPExcel_Reader_Excel2007 extends PHPExcel_Reader_Abstract implements PHPE
                                             $tries ++;
                                             include __DIR__ . '/../../../../../../application/Controller/ConverterController.php';
                                             $converter = new \Mini\Controller\ConverterController();
-                                            $contents = $converter->upload($pFilename, $zip, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                                            $contents = $converter->upload($pFilename, substr($pFilename, strrpos($pFilename,'/') + 1), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
                                             $zip->close();
                                             unset($zip);
 
                                             $pFilename = substr($pFilename, 0, strlen($pFilename) - 5);
-                                            $fHandle = fopen($pFilename . '_ggl.csv', 'w+');
+                                            $fHandle = fopen($pFilename . '_ggl.xlsx', 'w+');
                                             fwrite($fHandle, $contents);
                                             fclose($fHandle);
                                             unset($fHandle);
 
-                                            $objReader = PHPExcel_IOFactory::createReader('CSV');
-                                            $objPHPExcel = $objReader->load($pFilename . '_ggl.csv');
-                                            $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
-                                            $objWriter->save($pFilename . '_ggl.xlsx');
-
-                                            unset($objWriter);
-                                            unset($objPHPExcel);
-                                            unset($objReader);
-                                            
                                             return $this->load($pFilename . '_ggl.xlsx', $tries);
                                         }
 
